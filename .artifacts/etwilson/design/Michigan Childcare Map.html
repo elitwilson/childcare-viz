@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Michigan Childcare Access — Spike</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+<style>
+  :root {
+    --bg: #11151c;
+    --panel: #1a2029;
+    --panel-2: #222a35;
+    --line: #2e3845;
+    --ink: #e8edf3;
+    --ink-dim: #98a4b3;
+    --ink-faint: #66717f;
+    --accent: oklch(0.72 0.13 195);   /* teal */
+    --center: oklch(0.70 0.13 250);   /* blue   - Licensed Center */
+    --family: oklch(0.74 0.13 145);   /* green  - Family Home */
+    --group:  oklch(0.78 0.13 85);    /* amber  - Group Home */
+    --head:   oklch(0.70 0.13 25);    /* coral  - Head Start */
+    --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace;
+    --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --map-bg: #0d1014;
+  }
+
+  html[data-theme="light"] {
+    --bg: #eef1f6;
+    --panel: #ffffff;
+    --panel-2: #eef2f7;
+    --line: #dde3ec;
+    --ink: #1b2230;
+    --ink-dim: #586575;
+    --ink-faint: #8c98a8;
+    --map-bg: #e6eaf0;
+  }
+
+  html { transition: none; }
+  header, aside, .legend, .seg, .chip, .reset, input[type=range],
+  .leaflet-popup-content-wrapper { transition: background .25s, border-color .25s, color .25s; }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+  }
+
+  /* ---- Header ---- */
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+  header .mark {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--accent);
+    align-self: center;
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--accent) 22%, transparent);
+  }
+  header h1 {
+    font-size: 15px; font-weight: 600; letter-spacing: 0.2px; margin: 0;
+  }
+  header .sub {
+    font-size: 12px; color: var(--ink-faint);
+    font-family: var(--mono);
+  }
+  .theme-toggle {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 3px;
+  }
+  .theme-toggle button {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--sans); font-size: 12px; font-weight: 500;
+    color: var(--ink-dim); background: transparent; border: 0;
+    padding: 6px 11px; border-radius: 6px; cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .theme-toggle button[aria-pressed="true"] { background: var(--panel-2); color: var(--ink); }
+  .theme-toggle .ic { width: 13px; height: 13px; position: relative; }
+  /* sun */
+  .ic.sun { border-radius: 50%; box-shadow: 0 0 0 2px currentColor inset; }
+  .ic.sun::before, .ic.sun::after {
+    content: ""; position: absolute; inset: -4px; border-radius: 50%;
+    background: radial-gradient(circle, transparent 56%, currentColor 56%, currentColor 64%, transparent 66%);
+  }
+  /* moon */
+  .ic.moon { border-radius: 50%; box-shadow: 0 0 0 2px currentColor inset; overflow: hidden; }
+  .ic.moon::after {
+    content: ""; position: absolute; top: -3px; right: -4px;
+    width: 13px; height: 13px; border-radius: 50%; background: var(--panel);
+  }
+  header .spike-tag {
+    margin-left: 14px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+    padding: 4px 9px; border-radius: 4px;
+  }
+
+  /* ---- Layout ---- */
+  main { display: grid; grid-template-columns: 320px 1fr; min-height: 0; }
+
+  aside {
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    padding: 4px 0 28px;
+  }
+  aside::-webkit-scrollbar { width: 9px; }
+  aside::-webkit-scrollbar-thumb { background: var(--line); border-radius: 9px; }
+
+  .section { padding: 18px 22px; border-bottom: 1px solid var(--line); }
+  .section h2 {
+    font-size: 10.5px; font-weight: 600; letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+
+  /* ---- View toggle ---- */
+  .seg {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+    background: var(--bg); padding: 4px; border-radius: 9px;
+    border: 1px solid var(--line);
+  }
+  .seg button {
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    color: var(--ink-dim); background: transparent; border: 0;
+    padding: 9px 8px; border-radius: 6px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: background .15s, color .15s;
+  }
+  .seg button .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .6; }
+  .seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--ink); }
+  .seg button[aria-pressed="true"] .dot { opacity: 1; color: var(--accent); }
+
+  /* ---- Type chips ---- */
+  .chips { display: flex; flex-direction: column; gap: 7px; }
+  .chip {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 11px; border-radius: 8px; cursor: pointer;
+    background: var(--bg); border: 1px solid var(--line);
+    transition: border-color .15s, background .15s;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--ink-faint); }
+  .chip .sw { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+  .chip .nm { font-size: 13px; flex: 1; }
+  .chip .ct { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+  .chip[aria-checked="false"] { opacity: .4; }
+  .chip[aria-checked="false"] .sw { background: var(--ink-faint) !important; }
+
+  /* ---- Sliders ---- */
+  .slider-row { margin-bottom: 18px; }
+  .slider-row:last-child { margin-bottom: 0; }
+  .slider-row .lab {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 9px;
+  }
+  .slider-row .lab .t { font-size: 13px; color: var(--ink-dim); }
+  .slider-row .lab .v { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; border-radius: 4px;
+    background: var(--line); outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); border: 3px solid var(--panel);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 13px; height: 13px; border-radius: 50%;
+    background: var(--accent); border: 3px solid var(--panel);
+  }
+
+  /* ---- Stats ---- */
+  .stats { display: flex; flex-direction: column; gap: 14px; }
+  .stat .v {
+    font-family: var(--mono); font-size: 26px; font-weight: 500;
+    letter-spacing: -0.5px; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat .v.accent { color: var(--accent); }
+  .stat .k { font-size: 11.5px; color: var(--ink-faint); margin-top: 5px; }
+
+  .reset {
+    width: 100%; margin-top: 4px;
+    font-family: var(--sans); font-size: 12.5px; color: var(--ink-dim);
+    background: transparent; border: 1px solid var(--line);
+    padding: 9px; border-radius: 7px; cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .reset:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  /* ---- Map ---- */
+  #map { width: 100%; height: 100%; background: var(--map-bg); }
+  .leaflet-container { font-family: var(--sans); background: var(--map-bg); }
+
+  /* Legend */
+  .legend {
+    position: absolute; left: 14px; bottom: 18px; z-index: 600;
+    background: color-mix(in oklch, var(--panel) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; font-size: 12px; color: var(--ink-dim);
+    min-width: 150px;
+  }
+  .legend h3 { margin: 0 0 9px; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
+  .legend .row { display: flex; align-items: center; gap: 9px; margin: 6px 0; }
+  .legend .row .sw { width: 10px; height: 10px; border-radius: 3px; }
+  .legend .size-key { display: flex; align-items: flex-end; gap: 6px; margin-top: 4px; }
+  .legend .size-key span { color: var(--ink-faint); font-size: 11px; margin-left: 2px; }
+  .heat-bar { height: 9px; border-radius: 5px; margin: 4px 0 6px;
+    background: linear-gradient(90deg, oklch(0.55 0.10 250), oklch(0.78 0.14 145), oklch(0.82 0.16 85), oklch(0.66 0.20 25)); }
+  .heat-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-faint); }
+
+  /* Popup */
+  .leaflet-popup-content-wrapper {
+    background: var(--panel); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 11px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.5);
+  }
+  .leaflet-popup-tip { background: var(--panel); border: 1px solid var(--line); }
+  .leaflet-popup-content { margin: 14px 16px; font-family: var(--sans); }
+  .pop .pt { display: inline-flex; align-items: center; gap: 7px; font-size: 10.5px; letter-spacing: .8px; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+  .pop .pt .sw { width: 8px; height: 8px; border-radius: 2px; }
+  .pop .nm { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+  .pop .grid { display: grid; grid-template-columns: auto auto; gap: 4px 18px; }
+  .pop .grid .k { font-size: 12px; color: var(--ink-faint); }
+  .pop .grid .vv { font-size: 12px; font-family: var(--mono); text-align: right; }
+  .pop .stars { color: var(--group); letter-spacing: 1px; }
+  .leaflet-bar a, .leaflet-bar a:hover { background: var(--panel); color: var(--ink); border-color: var(--line); }
+  .map-wrap { position: relative; min-height: 0; }
+  .empty-note {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    z-index: 500; background: var(--panel); border: 1px solid var(--line);
+    padding: 12px 18px; border-radius: 10px; font-size: 13px; color: var(--ink-dim);
+    display: none;
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="mark"></span>
+  <h1>Michigan Childcare Access</h1>
+  <span class="sub">density &amp; capacity explorer</span>
+  <div class="theme-toggle" id="themeToggle" role="group" aria-label="Color theme">
+    <button data-theme-set="dark" aria-pressed="true"><span class="ic moon"></span>Dark</button>
+    <button data-theme-set="light" aria-pressed="false"><span class="ic sun"></span>Light</button>
+  </div>
+  <span class="spike-tag">Spike · synthetic data</span>
+</header>
+
+<main>
+  <aside>
+    <div class="section">
+      <h2>Map view</h2>
+      <div class="seg" id="viewSeg">
+        <button data-view="points" aria-pressed="true"><span class="dot"></span>Facilities</button>
+        <button data-view="heat" aria-pressed="false"><span class="dot"></span>Density</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Facility type</h2>
+      <div class="chips" id="typeChips"></div>
+    </div>
+
+    <div class="section">
+      <h2>Filters</h2>
+      <div class="slider-row">
+        <div class="lab"><span class="t">Min. licensed capacity</span><span class="v" id="capVal">0</span></div>
+        <input type="range" id="capSlider" min="0" max="150" step="5" value="0" />
+      </div>
+      <div class="slider-row">
+        <div class="lab"><span class="t">Min. quality rating</span><span class="v" id="rateVal">Any</span></div>
+        <input type="range" id="rateSlider" min="0" max="5" step="1" value="0" />
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Showing</h2>
+      <div class="stats">
+        <div class="stat"><div class="v accent" id="sCount">0</div><div class="k">facilities on map</div></div>
+        <div class="stat"><div class="v" id="sSeats">0</div><div class="k">total licensed seats</div></div>
+        <div class="stat"><div class="v" id="sRate">0.0</div><div class="k">avg. quality rating (of 5)</div></div>
+      </div>
+    </div>
+
+    <div class="section" style="border-bottom:0;">
+      <button class="reset" id="resetBtn">Reset all filters</button>
+    </div>
+  </aside>
+
+  <div class="map-wrap">
+    <div id="map"></div>
+    <div class="empty-note" id="emptyNote">No facilities match these filters.</div>
+    <div class="legend">
+      <div id="legendPoints">
+        <h3>Facility type</h3>
+        <div class="row"><span class="sw" style="background:var(--center)"></span>Licensed Center</div>
+        <div class="row"><span class="sw" style="background:var(--family)"></span>Family Home</div>
+        <div class="row"><span class="sw" style="background:var(--group)"></span>Group Home</div>
+        <div class="row"><span class="sw" style="background:var(--head)"></span>Head Start</div>
+        <div class="size-key">
+          <span class="sw" style="width:7px;height:7px;border-radius:50%;background:var(--ink-dim)"></span>
+          <span class="sw" style="width:13px;height:13px;border-radius:50%;background:var(--ink-dim)"></span>
+          <span>circle size = capacity</span>
+        </div>
+      </div>
+      <div id="legendHeat" style="display:none;">
+        <h3>Childcare density</h3>
+        <div class="heat-bar"></div>
+        <div class="heat-ends"><span>sparse · "desert"</span><span>dense</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ---------------- seeded RNG (stable data across reloads) ---------------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rng = mulberry32(20260608);
+function gauss(){return (rng()+rng()+rng()-1.5)/1.5;}
+function pick(arr){return arr[Math.floor(rng()*arr.length)];}
+
+/* ---------------- Michigan population centers ---------------- */
+const CITIES = [
+  {n:"Detroit",       lat:42.331, lng:-83.045, w:30, spread:0.22},
+  {n:"Grand Rapids",  lat:42.963, lng:-85.668, w:15, spread:0.14},
+  {n:"Ann Arbor",     lat:42.281, lng:-83.743, w:9,  spread:0.09},
+  {n:"Lansing",       lat:42.732, lng:-84.555, w:9,  spread:0.10},
+  {n:"Flint",         lat:43.012, lng:-83.687, w:7,  spread:0.10},
+  {n:"Kalamazoo",     lat:42.292, lng:-85.587, w:7,  spread:0.09},
+  {n:"Saginaw",       lat:43.419, lng:-83.950, w:5,  spread:0.09},
+  {n:"Muskegon",      lat:43.234, lng:-86.248, w:4,  spread:0.08},
+  {n:"Traverse City", lat:44.763, lng:-85.620, w:4,  spread:0.10},
+  {n:"Battle Creek",  lat:42.321, lng:-85.179, w:3,  spread:0.07},
+  {n:"Midland",       lat:43.615, lng:-84.247, w:3,  spread:0.07},
+  {n:"Marquette",     lat:46.543, lng:-87.395, w:2,  spread:0.10},
+  {n:"Petoskey",      lat:45.373, lng:-84.955, w:2,  spread:0.10},
+  {n:"Sault Ste. Marie",lat:46.495,lng:-84.345, w:1, spread:0.08},
+  {n:"Escanaba",      lat:45.745, lng:-87.064, w:1,  spread:0.08},
+  {n:"Alpena",        lat:45.061, lng:-83.433, w:1,  spread:0.08},
+];
+
+const TYPES = {
+  center: {label:"Licensed Center", color:"--center", capMin:35, capMax:180, share:0.34},
+  family: {label:"Family Home",     color:"--family", capMin:6,  capMax:12,  share:0.40},
+  group:  {label:"Group Home",      color:"--group",  capMin:7,  capMax:20,  share:0.16},
+  head:   {label:"Head Start",      color:"--head",   capMin:40, capMax:130, share:0.10},
+};
+const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+const FIRST = ["Sunrise","Little","Bright","Maple","Cedar","Riverside","Lakeshore","Northern","Acorn","Wildflower","Cornerstone","Great Lakes","Bumblebee","Storybook","Evergreen","Sunny","Harbor","Meadow","Pinecrest","First Step"];
+const LAST  = {center:["Learning Center","Academy","Early Education","Childcare Center","Montessori"],family:["Family Childcare","Home Daycare","Family Care","In-Home Care"],group:["Group Home","Care Cottage","Kids Club"],head:["Head Start","Early Head Start","Preschool Program"]};
+
+function weightedType(){
+  const r = rng(); let acc=0;
+  for(const k in TYPES){ acc+=TYPES[k].share; if(r<=acc) return k; }
+  return "family";
+}
+function buildFacilities(){
+  const out=[]; let id=1;
+  for(const c of CITIES){
+    const count = Math.round(c.w*1.7)+2;
+    for(let i=0;i<count;i++){
+      const t = weightedType();
+      const T = TYPES[t];
+      const lat = c.lat + gauss()*c.spread;
+      const lng = c.lng + gauss()*c.spread*1.25;
+      const cap = Math.round(T.capMin + rng()*(T.capMax-T.capMin));
+      const rate = Math.max(1, Math.min(5, Math.round(3.4 + gauss()*1.3)));
+      out.push({
+        id:id++, type:t, lat, lng, cap, rate,
+        city:c.n,
+        name: pick(FIRST)+" "+pick(LAST[t]),
+        ages: pick(["Infant–Pre-K","6 wks – 5 yrs","Toddler–School age","2 – 12 yrs","Infant–Toddler"]),
+      });
+    }
+  }
+  return out;
+}
+const FACILITIES = buildFacilities();
+
+/* ---------------- map ---------------- */
+const map = L.map('map', { zoomControl:true, attributionControl:true, minZoom:5, maxZoom:13 })
+  .setView([44.6, -85.6], 6);
+
+const BASEMAPS = {
+  dark:  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+};
+let tileLayer = null;
+function setBasemap(theme){
+  if(tileLayer) map.removeLayer(tileLayer);
+  tileLayer = L.tileLayer(BASEMAPS[theme] || BASEMAPS.dark, {
+    attribution:'&copy; OpenStreetMap &copy; CARTO',
+    subdomains:'abcd', maxZoom:19,
+  }).addTo(map);
+}
+
+const pointLayer = L.layerGroup().addTo(map);
+let heatLayer = null;
+
+/* ---------------- state ---------------- */
+const state = {
+  view:"points",
+  types:{center:true,family:true,group:true,head:true},
+  minCap:0,
+  minRate:0,
+};
+
+function visible(){
+  return FACILITIES.filter(f =>
+    state.types[f.type] && f.cap>=state.minCap && f.rate>=state.minRate);
+}
+function stars(n){return "★★★★★".slice(0,n)+"☆☆☆☆☆".slice(0,5-n);}
+
+function radiusFor(cap){ return 4 + Math.sqrt(cap)*1.15; }
+
+function renderPoints(list){
+  pointLayer.clearLayers();
+  list.forEach(f=>{
+    const col = cssVar(TYPES[f.type].color);
+    const m = L.circleMarker([f.lat,f.lng], {
+      radius: radiusFor(f.cap),
+      color: col, weight:1.4, fillColor: col, fillOpacity:0.55, opacity:0.9,
+    });
+    m.bindPopup(`
+      <div class="pop">
+        <div class="pt"><span class="sw" style="background:${col}"></span>${TYPES[f.type].label}</div>
+        <div class="nm">${f.name}</div>
+        <div class="grid">
+          <span class="k">Location</span><span class="vv">${f.city}</span>
+          <span class="k">Capacity</span><span class="vv">${f.cap} seats</span>
+          <span class="k">Ages</span><span class="vv">${f.ages}</span>
+          <span class="k">Rating</span><span class="vv"><span class="stars">${stars(f.rate)}</span></span>
+        </div>
+      </div>`, {closeButton:false});
+    pointLayer.addLayer(m);
+  });
+}
+
+function renderHeat(list){
+  const pts = list.map(f=>[f.lat,f.lng, Math.min(1, f.cap/120)]);
+  if(heatLayer){ map.removeLayer(heatLayer); heatLayer=null; }
+  heatLayer = L.heatLayer(pts, {
+    radius: 28, blur: 22, maxZoom: 11, minOpacity: 0.25,
+    gradient:{0.0:'#3b6fb0',0.4:'#4fae7a',0.7:'#d9b13f',1.0:'#d96a4a'},
+  }).addTo(map);
+}
+
+function updateStats(list){
+  const n=list.length;
+  const seats=list.reduce((s,f)=>s+f.cap,0);
+  const rate=n? (list.reduce((s,f)=>s+f.rate,0)/n):0;
+  document.getElementById('sCount').textContent = n.toLocaleString();
+  document.getElementById('sSeats').textContent = seats.toLocaleString();
+  document.getElementById('sRate').textContent = rate.toFixed(1);
+  document.getElementById('emptyNote').style.display = n? 'none':'block';
+}
+
+function render(){
+  const list = visible();
+  if(state.view==="points"){
+    if(heatLayer){ map.removeLayer(heatLayer); heatLayer=null; }
+    if(!map.hasLayer(pointLayer)) pointLayer.addTo(map);
+    renderPoints(list);
+    document.getElementById('legendPoints').style.display='';
+    document.getElementById('legendHeat').style.display='none';
+  } else {
+    pointLayer.clearLayers();
+    if(map.hasLayer(pointLayer)) map.removeLayer(pointLayer);
+    renderHeat(list);
+    document.getElementById('legendPoints').style.display='none';
+    document.getElementById('legendHeat').style.display='';
+  }
+  updateStats(list);
+}
+
+/* ---------------- controls ---------------- */
+// view toggle
+document.querySelectorAll('#viewSeg button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#viewSeg button').forEach(x=>x.setAttribute('aria-pressed', x===b));
+    state.view=b.dataset.view; render();
+  });
+});
+
+// type chips
+const chipWrap=document.getElementById('typeChips');
+Object.entries(TYPES).forEach(([k,T])=>{
+  const count=FACILITIES.filter(f=>f.type===k).length;
+  const el=document.createElement('div');
+  el.className='chip'; el.setAttribute('role','checkbox'); el.setAttribute('aria-checked','true');
+  el.innerHTML=`<span class="sw" style="background:${cssVar(T.color)}"></span><span class="nm">${T.label}</span><span class="ct">${count}</span>`;
+  el.addEventListener('click',()=>{
+    state.types[k]=!state.types[k];
+    el.setAttribute('aria-checked', state.types[k]);
+    render();
+  });
+  chipWrap.appendChild(el);
+});
+
+// sliders
+const capS=document.getElementById('capSlider'), capV=document.getElementById('capVal');
+capS.addEventListener('input',()=>{ state.minCap=+capS.value; capV.textContent=capS.value==='0'?'0':capS.value+'+'; render(); });
+const rateS=document.getElementById('rateSlider'), rateV=document.getElementById('rateVal');
+rateS.addEventListener('input',()=>{ state.minRate=+rateS.value; rateV.textContent = rateS.value==='0'?'Any':('★ '+rateS.value+'+'); render(); });
+
+// reset
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  state.types={center:true,family:true,group:true,head:true};
+  state.minCap=0; state.minRate=0;
+  document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-checked','true'));
+  capS.value=0; capV.textContent='0'; rateS.value=0; rateV.textContent='Any';
+  render();
+});
+
+render();
+
+/* ---------------- theme (light / dark) ---------------- */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  setBasemap(theme);
+  document.querySelectorAll('#themeToggle button').forEach(b=>
+    b.setAttribute('aria-pressed', b.dataset.themeSet===theme));
+  try { localStorage.setItem('mca-theme', theme); } catch(e){}
+}
+document.querySelectorAll('#themeToggle button').forEach(b=>{
+  b.addEventListener('click',()=>applyTheme(b.dataset.themeSet));
+});
+let savedTheme='dark';
+try { savedTheme = localStorage.getItem('mca-theme') || 'dark'; } catch(e){}
+applyTheme(savedTheme);
+</script>
+</body>
+</html>
