@@ -12,30 +12,30 @@ html, body {
 :root {
   --bg: #11151c;
   --panel: #1a2029;
-  --panel-2: #222b36;
-  --line: #2d3848;
+  --panel-2: #222a35;
+  --line: #2e3845;
   --ink: #e8edf3;
-  --ink-dim: #8b96a6;
-  --ink-faint: #4a5568;
-  --accent: oklch(72% 0.18 195);
-  --center: oklch(72% 0.18 195);
-  --family: oklch(72% 0.18 270);
-  --group: oklch(72% 0.18 30);
-  --head: oklch(72% 0.18 330);
-  --map-bg: #0e1219;
-  --mono: 'JetBrains Mono', 'Fira Mono', monospace;
-  --sans: 'Inter', system-ui, sans-serif;
+  --ink-dim: #98a4b3;
+  --ink-faint: #66717f;
+  --accent: oklch(0.72 0.13 195);
+  --center: oklch(0.70 0.13 250);
+  --family: oklch(0.74 0.13 145);
+  --group:  oklch(0.78 0.13 85);
+  --head:   oklch(0.70 0.13 25);
+  --map-bg: #0d1014;
+  --mono: ui-monospace, "SF Mono", "Roboto Mono", Menlo, monospace;
+  --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 html[data-theme="light"] {
-  --bg: #f4f6f9;
+  --bg: #eef1f6;
   --panel: #ffffff;
-  --panel-2: #edf0f5;
-  --line: #d0d8e4;
-  --ink: #1a2029;
-  --ink-dim: #4a5568;
-  --ink-faint: #8b96a6;
-  --map-bg: #e8ecf2;
+  --panel-2: #eef2f7;
+  --line: #dde3ec;
+  --ink: #1b2230;
+  --ink-dim: #586575;
+  --ink-faint: #8c98a8;
+  --map-bg: #e6eaf0;
 }
 
 html {
