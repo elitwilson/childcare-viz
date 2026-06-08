@@ -9,6 +9,10 @@ html, body {
   margin: 0;
 }
 
+#app {
+  display: contents;
+}
+
 :root {
   --bg: #11151c;
   --panel: #1a2029;
