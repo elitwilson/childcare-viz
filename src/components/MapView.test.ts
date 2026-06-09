@@ -74,6 +74,8 @@ import MapView from './MapView.vue';
 import { buildPopupHtml } from '../composables/useMapMarkers';
 import { LicenseType } from '../types/provider';
 import type { Provider } from '../types/provider';
+import { useProviderStore } from '../stores/providers';
+import { useFilterStore } from '../stores/filters';
 
 describe('MapView', () => {
   beforeEach(() => {
@@ -206,6 +208,83 @@ function makeProvider(overrides: Partial<Provider> = {}): Provider {
     ...overrides,
   };
 }
+
+describe('empty state overlay', () => {
+  const mockedProviderStore = vi.mocked(useProviderStore);
+  const mockedFilterStore = vi.mocked(useFilterStore);
+
+  function setStores(
+    providers: Provider[],
+    filters: { activeTypes: Record<string, boolean>; minCapacity: number },
+  ) {
+    mockedProviderStore.mockReturnValue({
+      providers,
+      loading: false,
+      error: null,
+      initialized: providers.length > 0,
+      init: mockProviderInit,
+    } as ReturnType<typeof mockedProviderStore>);
+    mockedFilterStore.mockReturnValue(
+      filters as ReturnType<typeof mockedFilterStore>,
+    );
+  }
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    vi.clearAllMocks();
+    mockMap.setView.mockReturnThis();
+    mockTileLayer.addTo.mockReturnThis();
+    setStores([], { activeTypes: { center: true, family_home: true, group_home: true }, minCapacity: 0 });
+  });
+
+  it('shows overlay when providers are loaded but none pass the filters', () => {
+    const provider = makeProvider({ capacity: 5, licenseType: LicenseType.Center });
+    setStores([provider], { activeTypes: { center: false, family_home: false, group_home: false }, minCapacity: 0 });
+
+    const wrapper = mount(MapView);
+    const overlay = wrapper.find('[data-test="empty-note"]');
+    expect(overlay.exists()).toBe(true);
+    expect(overlay.text()).toContain('No facilities match these filters.');
+  });
+
+  it('shows overlay when provider capacity is below minCapacity', () => {
+    const provider = makeProvider({ capacity: 5, licenseType: LicenseType.Center });
+    setStores([provider], { activeTypes: { center: true, family_home: true, group_home: true }, minCapacity: 10 });
+
+    const wrapper = mount(MapView);
+    expect(wrapper.find('[data-test="empty-note"]').exists()).toBe(true);
+  });
+
+  it('hides overlay when at least one provider passes the filters', () => {
+    const provider = makeProvider({ capacity: 25, licenseType: LicenseType.Center });
+    setStores([provider], { activeTypes: { center: true, family_home: true, group_home: true }, minCapacity: 0 });
+
+    const wrapper = mount(MapView);
+    expect(wrapper.find('[data-test="empty-note"]').exists()).toBe(false);
+  });
+
+  it('hides overlay when providers array is empty (initial load)', () => {
+    // Default beforeEach sets providers: []
+    const wrapper = mount(MapView);
+    expect(wrapper.find('[data-test="empty-note"]').exists()).toBe(false);
+  });
+
+  it('hides overlay when provider capacity equals minCapacity (inclusive boundary)', () => {
+    const provider = makeProvider({ capacity: 10, licenseType: LicenseType.Center });
+    setStores([provider], { activeTypes: { center: true, family_home: true, group_home: true }, minCapacity: 10 });
+
+    const wrapper = mount(MapView);
+    expect(wrapper.find('[data-test="empty-note"]').exists()).toBe(false);
+  });
+
+  it('shows overlay after minCapacity is raised above all loaded providers', () => {
+    const provider = makeProvider({ capacity: 5, licenseType: LicenseType.Center });
+    setStores([provider], { activeTypes: { center: true, family_home: true, group_home: true }, minCapacity: 6 });
+
+    const wrapper = mount(MapView);
+    expect(wrapper.find('[data-test="empty-note"]').exists()).toBe(true);
+  });
+});
 
 describe('buildPopupHtml', () => {
   const CENTER_COLOR = 'oklch(0.70 0.13 250)';
