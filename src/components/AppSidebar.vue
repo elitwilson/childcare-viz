@@ -33,8 +33,8 @@ function toggleType(type: string) {
     <div class="section" data-test="section-map-view">
       <h2>Map view</h2>
       <div class="seg">
-        <button data-test="btn-facilities" :aria-pressed="String(mapStore.activeView === 'facilities')" @click="mapStore.activeView = 'facilities'">Facilities</button>
-        <button data-test="btn-density" :aria-pressed="String(mapStore.activeView === 'density')" @click="mapStore.activeView = 'density'">Density</button>
+        <button data-test="btn-facilities" :aria-pressed="mapStore.activeView === 'facilities'" @click="mapStore.activeView = 'facilities'">Facilities</button>
+        <button data-test="btn-density" :aria-pressed="mapStore.activeView === 'density'" @click="mapStore.activeView = 'density'">Density</button>
       </div>
     </div>
 
@@ -47,7 +47,7 @@ function toggleType(type: string) {
           class="chip"
           role="checkbox"
           :data-test="`chip-${type}`"
-          :aria-checked="String(filterStore.activeTypes[type])"
+          :aria-checked="filterStore.activeTypes[type]"
           @click="toggleType(type)"
         >
           <span class="sw" :style="{ background: `var(${colorVar})` }"></span>

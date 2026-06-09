@@ -2,7 +2,7 @@
 id: STR-016
 title: Legend panel (AppLegend.vue)
 epic: EPIC-004
-status: open
+status: complete
 priority: medium
 ---
 

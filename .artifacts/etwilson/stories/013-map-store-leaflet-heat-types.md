@@ -2,7 +2,7 @@
 id: STR-013
 title: useMapStore + leaflet-heat type declaration
 epic: EPIC-004
-status: open
+status: complete
 priority: high
 ---
 

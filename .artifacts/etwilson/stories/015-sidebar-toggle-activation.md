@@ -2,7 +2,7 @@
 id: STR-015
 title: Sidebar view toggle activation
 epic: EPIC-004
-status: open
+status: complete
 priority: medium
 ---
 

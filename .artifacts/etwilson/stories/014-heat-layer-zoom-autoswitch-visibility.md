@@ -2,7 +2,7 @@
 id: STR-014
 title: Heat layer, zoom auto-switch, and layer visibility
 epic: EPIC-004
-status: open
+status: complete
 priority: high
 ---
 
