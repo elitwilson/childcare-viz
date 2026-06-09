@@ -168,4 +168,135 @@ describe('AppSidebar', () => {
       expect(wrapper.find('[data-test="capacity-value"]').text()).toBe('75');
     });
   });
+
+  describe('Showing section', () => {
+    it('renders the showing section', () => {
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="section-showing"]').exists()).toBe(true);
+    });
+
+    it('displays facility count for currently filtered providers', () => {
+      const providerStore = useProviderStore();
+      providerStore.providers = [
+        makeProvider({ id: '1', licenseType: LicenseType.Center, capacity: 20 }),
+        makeProvider({ id: '2', licenseType: LicenseType.Center, capacity: 30 }),
+        makeProvider({ id: '3', licenseType: LicenseType.GroupHome, capacity: 10 }),
+      ];
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe('3');
+    });
+
+    it('displays total seats for currently filtered providers', () => {
+      const providerStore = useProviderStore();
+      providerStore.providers = [
+        makeProvider({ id: '1', licenseType: LicenseType.Center, capacity: 20 }),
+        makeProvider({ id: '2', licenseType: LicenseType.Center, capacity: 30 }),
+        makeProvider({ id: '3', licenseType: LicenseType.GroupHome, capacity: 10 }),
+      ];
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="stat-total-seats"]').text()).toBe('60');
+    });
+
+    it('count and seats update when a type is toggled off', async () => {
+      const providerStore = useProviderStore();
+      const filterStore = useFilterStore();
+      providerStore.providers = [
+        makeProvider({ id: '1', licenseType: LicenseType.Center, capacity: 20 }),
+        makeProvider({ id: '2', licenseType: LicenseType.GroupHome, capacity: 15 }),
+      ];
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe('2');
+      expect(wrapper.find('[data-test="stat-total-seats"]').text()).toBe('35');
+
+      filterStore.activeTypes[LicenseType.GroupHome] = false;
+      await flushPromises();
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe('1');
+      expect(wrapper.find('[data-test="stat-total-seats"]').text()).toBe('20');
+    });
+
+    it('count and seats update when minCapacity rises', async () => {
+      const providerStore = useProviderStore();
+      const filterStore = useFilterStore();
+      providerStore.providers = [
+        makeProvider({ id: '1', licenseType: LicenseType.Center, capacity: 20 }),
+        makeProvider({ id: '2', licenseType: LicenseType.Center, capacity: 50 }),
+      ];
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe('2');
+
+      filterStore.minCapacity = 30;
+      await flushPromises();
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe('1');
+      expect(wrapper.find('[data-test="stat-total-seats"]').text()).toBe('50');
+    });
+
+    it('shows 0 count and 0 seats when provider list is empty', () => {
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe('0');
+      expect(wrapper.find('[data-test="stat-total-seats"]').text()).toBe('0');
+    });
+
+    it('formats count >= 1000 with commas via toLocaleString', () => {
+      const providerStore = useProviderStore();
+      providerStore.providers = Array.from({ length: 1250 }, (_, i) =>
+        makeProvider({ id: String(i), licenseType: LicenseType.Center, capacity: 1 })
+      );
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe((1250).toLocaleString());
+    });
+
+    it('formats seats >= 1000 with commas via toLocaleString', () => {
+      const providerStore = useProviderStore();
+      providerStore.providers = [
+        makeProvider({ id: '1', licenseType: LicenseType.Center, capacity: 1500 }),
+      ];
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="stat-total-seats"]').text()).toBe((1500).toLocaleString());
+    });
+  });
+
+  describe('Reset all filters', () => {
+    it('renders the reset button', () => {
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="btn-reset"]').exists()).toBe(true);
+    });
+
+    it('clicking reset sets all activeTypes to true', async () => {
+      const filterStore = useFilterStore();
+      filterStore.activeTypes[LicenseType.Center] = false;
+      filterStore.activeTypes[LicenseType.GroupHome] = false;
+      const wrapper = mount(AppSidebar);
+      await wrapper.find('[data-test="btn-reset"]').trigger('click');
+      expect(filterStore.activeTypes[LicenseType.Center]).toBe(true);
+      expect(filterStore.activeTypes[LicenseType.GroupHome]).toBe(true);
+      expect(filterStore.activeTypes[LicenseType.FamilyHome]).toBe(true);
+    });
+
+    it('clicking reset sets minCapacity to 0', async () => {
+      const filterStore = useFilterStore();
+      filterStore.minCapacity = 75;
+      const wrapper = mount(AppSidebar);
+      await wrapper.find('[data-test="btn-reset"]').trigger('click');
+      expect(filterStore.minCapacity).toBe(0);
+    });
+
+    it('stats update immediately after reset reflects full provider set', async () => {
+      const providerStore = useProviderStore();
+      const filterStore = useFilterStore();
+      providerStore.providers = [
+        makeProvider({ id: '1', licenseType: LicenseType.Center, capacity: 20 }),
+        makeProvider({ id: '2', licenseType: LicenseType.GroupHome, capacity: 15 }),
+      ];
+      filterStore.activeTypes[LicenseType.GroupHome] = false;
+      filterStore.minCapacity = 25;
+      const wrapper = mount(AppSidebar);
+      await flushPromises();
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe('0');
+
+      await wrapper.find('[data-test="btn-reset"]').trigger('click');
+      await flushPromises();
+      expect(wrapper.find('[data-test="stat-facility-count"]').text()).toBe('2');
+      expect(wrapper.find('[data-test="stat-total-seats"]').text()).toBe('35');
+    });
+  });
 });

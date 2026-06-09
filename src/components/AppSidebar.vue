@@ -23,8 +23,24 @@ const typeCounts = computed(() => {
   return counts;
 });
 
+const filteredProviders = computed(() =>
+  providerStore.providers.filter(
+    p => filterStore.activeTypes[p.licenseType] && p.capacity >= filterStore.minCapacity
+  )
+);
+
+const facilityCount = computed(() => filteredProviders.value.length);
+const totalSeats = computed(() => filteredProviders.value.reduce((sum, p) => sum + p.capacity, 0));
+
 function toggleType(type: string) {
   (filterStore.activeTypes as Record<string, boolean>)[type] = !(filterStore.activeTypes as Record<string, boolean>)[type];
+}
+
+function resetFilters() {
+  filterStore.minCapacity = 0;
+  for (const key of Object.keys(filterStore.activeTypes)) {
+    (filterStore.activeTypes as Record<string, boolean>)[key] = true;
+  }
 }
 </script>
 
@@ -72,6 +88,20 @@ function toggleType(type: string) {
         <span class="lab" data-test="capacity-value">{{ filterStore.minCapacity }}</span>
       </div>
     </div>
+
+    <div class="section" data-test="section-showing">
+      <h2>Showing</h2>
+      <div class="stat-row">
+        <span class="stat-value" data-test="stat-facility-count">{{ facilityCount.toLocaleString() }}</span>
+        <span class="stat-label">facilities on map</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-value" data-test="stat-total-seats">{{ totalSeats.toLocaleString() }}</span>
+        <span class="stat-label">licensed seats</span>
+      </div>
+    </div>
+
+    <button class="reset" data-test="btn-reset" @click="resetFilters">Reset all filters</button>
   </aside>
 </template>
 
@@ -208,5 +238,50 @@ aside::-webkit-scrollbar-thumb {
 input[type="range"] {
   flex: 1;
   accent-color: var(--accent, #4a9);
+}
+
+/* Showing stats */
+.stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.stat-row:last-child {
+  margin-bottom: 0;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink, #ddd);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--ink-dim, #888);
+}
+
+/* Reset button */
+.reset {
+  display: block;
+  width: calc(100% - 2rem);
+  margin: 0.75rem 1rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink, #ddd);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.reset:hover {
+  border-color: var(--accent, #4a9);
+  color: var(--accent, #4a9);
 }
 </style>
