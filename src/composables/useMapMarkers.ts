@@ -1,16 +1,39 @@
 import L from 'leaflet';
 import { watch } from 'vue';
 import { LicenseType } from '../types/provider';
+import type { Provider } from '../types/provider';
 import type { useProviderStore } from '../stores/providers';
 import type { useFilterStore } from '../stores/filters';
+
+const LICENSE_META: Record<string, { label: string; cssVar: string }> = {
+  [LicenseType.Center]:     { label: 'Licensed Center', cssVar: '--center' },
+  [LicenseType.FamilyHome]: { label: 'Family Home',     cssVar: '--family' },
+  [LicenseType.GroupHome]:  { label: 'Group Home',      cssVar: '--group'  },
+};
 
 function resolveColors(): Record<string, string> {
   const style = getComputedStyle(document.documentElement);
   return {
-    [LicenseType.Center]: style.getPropertyValue('--center').trim(),
-    [LicenseType.FamilyHome]: style.getPropertyValue('--family').trim(),
-    [LicenseType.GroupHome]: style.getPropertyValue('--group').trim(),
+    [LicenseType.Center]:     style.getPropertyValue(LICENSE_META[LicenseType.Center].cssVar).trim(),
+    [LicenseType.FamilyHome]: style.getPropertyValue(LICENSE_META[LicenseType.FamilyHome].cssVar).trim(),
+    [LicenseType.GroupHome]:  style.getPropertyValue(LICENSE_META[LicenseType.GroupHome].cssVar).trim(),
   };
+}
+
+export function buildPopupHtml(provider: Provider, color: string): string {
+  const { label } = LICENSE_META[provider.licenseType];
+  const ratingRow = provider.rating !== null
+    ? `<span class="k">Rating</span><span class="vv">${provider.rating}</span>`
+    : '';
+  return `<div class="pop">
+  <div class="pt"><span class="sw" style="background:${color}"></span>${label}</div>
+  <div class="nm">${provider.name}</div>
+  <div class="grid">
+    <span class="k">Location</span><span class="vv">${provider.city}</span>
+    <span class="k">Capacity</span><span class="vv">${provider.capacity} seats</span>
+    ${ratingRow}
+  </div>
+</div>`;
 }
 
 function markerRadius(capacity: number): number {
