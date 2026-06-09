@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useTheme } from '../composables/useTheme';
+const { theme, setTheme } = useTheme();
 </script>
 
 <template>
@@ -7,11 +9,11 @@
     <h1>Michigan Childcare Access</h1>
     <span class="sub">density &amp; capacity explorer</span>
     <div id="themeToggle" class="theme-toggle">
-      <button data-theme-set="dark" aria-pressed="true">
-        <span class="ic moon"></span>
+      <button data-theme-set="dark" :aria-pressed="theme === 'dark'" @click="setTheme('dark')">
+        <span class="ic moon"></span>Dark
       </button>
-      <button data-theme-set="light" aria-pressed="false">
-        <span class="ic sun"></span>
+      <button data-theme-set="light" :aria-pressed="theme === 'light'" @click="setTheme('light')">
+        <span class="ic sun"></span>Light
       </button>
     </div>
     <span class="spike-tag">Spike · synthetic data</span>
