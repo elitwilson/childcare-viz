@@ -45,7 +45,7 @@ describe('App', () => {
     vi.clearAllMocks();
     mockMap.setView.mockReturnThis();
     mockTileLayer.addTo.mockReturnThis();
-    mockUseProviderStore.mockReturnValue(makeStore() as ReturnType<typeof useProviderStore>);
+    mockUseProviderStore.mockReturnValue(makeStore() as unknown as ReturnType<typeof useProviderStore>);
   });
 
   it('renders AppHeader', () => {
@@ -80,13 +80,13 @@ describe('App', () => {
   });
 
   it('renders "Loading…" when store.loading is true', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({ loading: true }) as ReturnType<typeof useProviderStore>);
+    mockUseProviderStore.mockReturnValue(makeStore({ loading: true }) as unknown as ReturnType<typeof useProviderStore>);
     const wrapper = mount(App);
     expect(wrapper.text()).toContain('Loading…');
   });
 
   it('renders "Error: {message}" when store.error is set', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({ error: 'fetch failed' }) as ReturnType<typeof useProviderStore>);
+    mockUseProviderStore.mockReturnValue(makeStore({ error: 'fetch failed' }) as unknown as ReturnType<typeof useProviderStore>);
     const wrapper = mount(App);
     expect(wrapper.text()).toContain('Error: fetch failed');
   });
@@ -95,19 +95,19 @@ describe('App', () => {
     mockUseProviderStore.mockReturnValue(makeStore({
       providers: [{ id: '1', name: 'Test', licenseType: 'center', capacity: 10, lat: 42, lng: -83, address: '1 Main', city: 'Detroit', county: 'Wayne', zipCode: '48201', rating: null }],
       initialized: true,
-    }) as ReturnType<typeof useProviderStore>);
+    }) as unknown as ReturnType<typeof useProviderStore>);
     const wrapper = mount(App);
     expect(wrapper.find('[data-test="dev-data-view"]').exists()).toBe(true);
   });
 
   it('does not render DevDataView when loading', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({ loading: true }) as ReturnType<typeof useProviderStore>);
+    mockUseProviderStore.mockReturnValue(makeStore({ loading: true }) as unknown as ReturnType<typeof useProviderStore>);
     const wrapper = mount(App);
     expect(wrapper.find('[data-test="dev-data-view"]').exists()).toBe(false);
   });
 
   it('does not render DevDataView when error is set', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({ error: 'oops' }) as ReturnType<typeof useProviderStore>);
+    mockUseProviderStore.mockReturnValue(makeStore({ error: 'oops' }) as unknown as ReturnType<typeof useProviderStore>);
     const wrapper = mount(App);
     expect(wrapper.find('[data-test="dev-data-view"]').exists()).toBe(false);
   });

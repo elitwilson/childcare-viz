@@ -69,14 +69,14 @@ describe('MapView', () => {
 
   it('creates a CARTO dark tile layer with correct URL', () => {
     mount(MapView);
-    const url = (L.tileLayer as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const url = (L.tileLayer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(url).toContain('cartocdn.com');
     expect(url).toContain('dark_all');
   });
 
   it('creates tile layer with correct options', () => {
     mount(MapView);
-    const opts = (L.tileLayer as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    const opts = (L.tileLayer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
     expect(opts).toMatchObject({
       attribution: '&copy; OpenStreetMap &copy; CARTO',
       subdomains: 'abcd',

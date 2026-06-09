@@ -16,7 +16,7 @@ interface PageResponse {
 }
 
 const BASE_URL =
-  'https://services1.arcgis.com/vq5LBRIGrOructue/arcgis/rest/services/MichiganChildCareProviders/FeatureServer/0/query';
+  'https://utility.arcgis.com/usrsvcs/servers/a79c3b0caedf412599085941e2af91d4/rest/services/CSS/CSS_LARA/MapServer/5/query';
 
 const OFFSETS = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000];
 
@@ -35,7 +35,10 @@ async function fetchPage(offset: number): Promise<RawProvider[]> {
     throw new Error(`Fetch failed for offset ${offset}: ${response.status} ${response.statusText}`);
   }
 
-  const data = (await response.json()) as PageResponse;
+  const data = (await response.json()) as PageResponse & { error?: { code: number; message: string } };
+  if (data.error) {
+    throw new Error(`ArcGIS error (offset ${offset}): ${data.error.message}`);
+  }
   return data.features.map((f) => f.attributes);
 }
 
