@@ -4,6 +4,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import AppSidebar from './AppSidebar.vue';
 import { useProviderStore } from '../stores/providers';
 import { useFilterStore } from '../stores/filters';
+import { useMapStore } from '../stores/map';
 import type { Provider } from '../types/provider';
 import { LicenseType } from '../types/provider';
 
@@ -45,22 +46,37 @@ describe('AppSidebar', () => {
   });
 
   describe('Map view section', () => {
-    it('renders two disabled buttons for Facilities and Density', () => {
+    it('clicking Facilities button sets activeView to "facilities"', async () => {
+      const mapStore = useMapStore();
+      mapStore.activeView = 'density';
       const wrapper = mount(AppSidebar);
-      const facilitiesBtn = wrapper.find('[data-test="btn-facilities"]');
-      const densityBtn = wrapper.find('[data-test="btn-density"]');
-      expect(facilitiesBtn.attributes('disabled')).toBeDefined();
-      expect(densityBtn.attributes('disabled')).toBeDefined();
+      await wrapper.find('[data-test="btn-facilities"]').trigger('click');
+      expect(mapStore.activeView).toBe('facilities');
     });
 
-    it('Facilities button has aria-pressed="true"', () => {
+    it('clicking Density button sets activeView to "density"', async () => {
+      const mapStore = useMapStore();
+      const wrapper = mount(AppSidebar);
+      await wrapper.find('[data-test="btn-density"]').trigger('click');
+      expect(mapStore.activeView).toBe('density');
+    });
+
+    it('aria-pressed updates reactively when activeView changes externally', async () => {
+      const mapStore = useMapStore();
       const wrapper = mount(AppSidebar);
       expect(wrapper.find('[data-test="btn-facilities"]').attributes('aria-pressed')).toBe('true');
+      expect(wrapper.find('[data-test="btn-density"]').attributes('aria-pressed')).toBe('false');
+      mapStore.activeView = 'density';
+      await flushPromises();
+      expect(wrapper.find('[data-test="btn-facilities"]').attributes('aria-pressed')).toBe('false');
+      expect(wrapper.find('[data-test="btn-density"]').attributes('aria-pressed')).toBe('true');
     });
 
-    it('section container has aria-disabled="true"', () => {
+    it('neither button is disabled and section has no aria-disabled', () => {
       const wrapper = mount(AppSidebar);
-      expect(wrapper.find('[data-test="section-map-view"]').attributes('aria-disabled')).toBe('true');
+      expect(wrapper.find('[data-test="btn-facilities"]').attributes('disabled')).toBeUndefined();
+      expect(wrapper.find('[data-test="btn-density"]').attributes('disabled')).toBeUndefined();
+      expect(wrapper.find('[data-test="section-map-view"]').attributes('aria-disabled')).toBeUndefined();
     });
   });
 
