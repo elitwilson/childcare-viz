@@ -16,7 +16,7 @@ const { theme, setTheme } = useTheme();
         <span class="ic sun"></span>Light
       </button>
     </div>
-    <span class="spike-tag">Spike · synthetic data</span>
+    <span class="source-tag">Source: Michigan LARA</span>
   </header>
 </template>
 
@@ -63,13 +63,16 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  gap: 4px;
+  padding: 0 8px;
   height: 24px;
   border: 1px solid var(--line);
   border-radius: 4px;
   background: transparent;
   cursor: pointer;
   color: var(--ink-dim);
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .theme-toggle button[aria-pressed="true"] {
@@ -87,7 +90,7 @@ header h1 {
   font-size: 0.75rem;
 }
 
-.spike-tag {
+.source-tag {
   font-size: 0.65rem;
   color: var(--ink-dim);
   background: var(--panel-2);

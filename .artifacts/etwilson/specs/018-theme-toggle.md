@@ -1,7 +1,7 @@
 ---
 number: 018
 story: STR-018
-status: ready
+status: complete
 base_branch: main
 depends_on: []
 scope_files:
