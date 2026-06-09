@@ -1,19 +1,53 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 
-const mockTileLayer = {
-  addTo: vi.fn().mockReturnThis(),
-};
-const mockMap = {
-  setView: vi.fn().mockReturnThis(),
-  remove: vi.fn(),
-};
+// Hoist all mock variables so vi.mock factories can reference them
+const { mockTileLayer, mockMap, mockUseMapMarkers, mockProviderInit } = vi.hoisted(() => {
+  const mockTileLayer = { addTo: vi.fn().mockReturnThis() };
+  const mockMap = {
+    setView: vi.fn().mockReturnThis(),
+    remove: vi.fn(),
+    addLayer: vi.fn(),
+    removeLayer: vi.fn(),
+  };
+  return {
+    mockTileLayer,
+    mockMap,
+    mockUseMapMarkers: vi.fn(),
+    mockProviderInit: vi.fn(),
+  };
+});
 
 vi.mock('leaflet', () => ({
   default: {
     map: vi.fn(() => mockMap),
     tileLayer: vi.fn(() => mockTileLayer),
+    canvas: vi.fn(() => ({})),
+    circleMarker: vi.fn(() => ({})),
+    layerGroup: vi.fn(() => ({ addLayer: vi.fn(), clearLayers: vi.fn() })),
   },
+}));
+
+vi.mock('../composables/useMapMarkers', () => ({
+  useMapMarkers: mockUseMapMarkers,
+}));
+
+vi.mock('../stores/providers', () => ({
+  useProviderStore: vi.fn(() => ({
+    providers: [],
+    loading: false,
+    error: null,
+    initialized: false,
+    init: mockProviderInit,
+  })),
+}));
+
+vi.mock('../stores/filters', () => ({
+  useFilterStore: vi.fn(() => ({
+    activeTypes: { center: true, family_home: true, group_home: true },
+    minCapacity: 0,
+  })),
 }));
 
 import L from 'leaflet';
@@ -21,6 +55,7 @@ import MapView from './MapView.vue';
 
 describe('MapView', () => {
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
     mockMap.setView.mockReturnThis();
     mockTileLayer.addTo.mockReturnThis();
@@ -102,5 +137,20 @@ describe('MapView', () => {
     expect(mockMap.remove).toHaveBeenCalledOnce();
     mount(MapView);
     expect(L.map).toHaveBeenCalledTimes(2);
+  });
+
+  // Store wiring (from STR-010)
+  it('calls providerStore.init() on mount', () => {
+    mount(MapView);
+    expect(mockProviderInit).toHaveBeenCalledOnce();
+  });
+
+  it('calls useMapMarkers with the map, providerStore, and filterStore on mount', () => {
+    mount(MapView);
+    expect(mockUseMapMarkers).toHaveBeenCalledOnce();
+    const [mapArg, providerArg, filterArg] = mockUseMapMarkers.mock.calls[0];
+    expect(mapArg).toBe(mockMap);
+    expect(providerArg).toHaveProperty('init');
+    expect(filterArg).toHaveProperty('activeTypes');
   });
 });

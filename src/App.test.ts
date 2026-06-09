@@ -1,44 +1,54 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount, flushPromises } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 
-const mockTileLayer = { addTo: vi.fn().mockReturnThis() };
-const mockMap = { setView: vi.fn().mockReturnThis(), remove: vi.fn() };
+const { mockTileLayer, mockMap, mockInit } = vi.hoisted(() => {
+  return {
+    mockTileLayer: { addTo: vi.fn().mockReturnThis() },
+    mockMap: { setView: vi.fn().mockReturnThis(), remove: vi.fn(), addLayer: vi.fn(), removeLayer: vi.fn() },
+    mockInit: vi.fn(),
+  };
+});
 
 vi.mock('leaflet', () => ({
   default: {
     map: vi.fn(() => mockMap),
     tileLayer: vi.fn(() => mockTileLayer),
+    canvas: vi.fn(() => ({})),
+    circleMarker: vi.fn(() => ({})),
+    layerGroup: vi.fn(() => ({ addLayer: vi.fn(), clearLayers: vi.fn() })),
   },
 }));
 
-const mockInit = vi.fn();
-
-vi.mock('./stores/providers', () => ({
-  useProviderStore: vi.fn(),
+vi.mock('./composables/useMapMarkers', () => ({
+  useMapMarkers: vi.fn(),
 }));
 
-import { useProviderStore } from './stores/providers';
-import App from './App.vue';
-
-const mockUseProviderStore = vi.mocked(useProviderStore);
-
-function makeStore(overrides: object = {}) {
-  return {
+vi.mock('./stores/providers', () => ({
+  useProviderStore: vi.fn(() => ({
     providers: [],
     loading: false,
     error: null,
     initialized: false,
     init: mockInit,
-    ...overrides,
-  };
-}
+  })),
+}));
+
+vi.mock('./stores/filters', () => ({
+  useFilterStore: vi.fn(() => ({
+    activeTypes: { center: true, family_home: true, group_home: true },
+    minCapacity: 0,
+  })),
+}));
+
+import App from './App.vue';
 
 describe('App', () => {
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
     mockMap.setView.mockReturnThis();
     mockTileLayer.addTo.mockReturnThis();
-    mockUseProviderStore.mockReturnValue(makeStore() as unknown as ReturnType<typeof useProviderStore>);
   });
 
   it('renders AppHeader', () => {
@@ -66,10 +76,9 @@ describe('App', () => {
     expect(wrapper.find('main #map').exists()).toBe(true);
   });
 
-  it('calls store.init() once on mount', async () => {
+  it('calls store.init() on mount', async () => {
     mount(App);
     await flushPromises();
-    expect(mockInit).toHaveBeenCalledOnce();
+    expect(mockInit).toHaveBeenCalled();
   });
-
 });

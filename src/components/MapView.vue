@@ -2,9 +2,15 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useProviderStore } from '../stores/providers';
+import { useFilterStore } from '../stores/filters';
+import { useMapMarkers } from '../composables/useMapMarkers';
 
 const mapEl = ref<HTMLElement>();
 let map: L.Map | null = null;
+
+const providerStore = useProviderStore();
+const filterStore = useFilterStore();
 
 onMounted(() => {
   map = L.map(mapEl.value!, {
@@ -19,6 +25,9 @@ onMounted(() => {
     subdomains: 'abcd',
     maxZoom: 19,
   }).addTo(map);
+
+  providerStore.init();
+  useMapMarkers(map, providerStore, filterStore);
 });
 
 onUnmounted(() => {
