@@ -120,7 +120,6 @@ aside::-webkit-scrollbar-thumb {
 .seg {
   display: flex;
   gap: 0;
-  pointer-events: none;
 }
 
 .seg button {
@@ -130,8 +129,7 @@ aside::-webkit-scrollbar-thumb {
   background: var(--panel);
   border: 1px solid var(--line);
   color: var(--ink, #ddd);
-  cursor: not-allowed;
-  opacity: 0.7;
+  cursor: pointer;
 }
 
 .seg button:first-child {
