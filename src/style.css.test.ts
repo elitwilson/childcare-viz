@@ -63,3 +63,48 @@ describe('Global styles & theme variables', () => {
     expect(css).toContain('.map-wrap');
   });
 });
+
+describe('Leaflet popup styles', () => {
+  it('defines .leaflet-popup-content-wrapper with var(--panel) background', () => {
+    expect(css).toContain('.leaflet-popup-content-wrapper');
+    expect(css).toMatch(/\.leaflet-popup-content-wrapper[^}]*background[^:]*:[^}]*var\(--panel\)/s);
+  });
+
+  it('defines .leaflet-popup-content-wrapper with var(--line) border', () => {
+    expect(css).toMatch(/\.leaflet-popup-content-wrapper[^}]*border[^:]*:[^}]*var\(--line\)/s);
+  });
+
+  it('defines .leaflet-popup-tip with var(--panel) background', () => {
+    expect(css).toContain('.leaflet-popup-tip');
+    expect(css).toMatch(/\.leaflet-popup-tip[^}]*background[^:]*:[^}]*var\(--panel\)/s);
+  });
+
+  it('defines .leaflet-popup-content selector', () => {
+    expect(css).toContain('.leaflet-popup-content');
+  });
+
+  it('defines .pop .pt selector', () => {
+    expect(css).toContain('.pop .pt');
+  });
+
+  it('defines .pop .pt .sw selector (color swatch)', () => {
+    expect(css).toContain('.pop .pt .sw');
+  });
+
+  it('defines .pop .nm selector (provider name)', () => {
+    expect(css).toContain('.pop .nm');
+  });
+
+  it('defines .pop .grid selector', () => {
+    expect(css).toContain('.pop .grid');
+  });
+
+  it('defines .pop .grid .k selector (key column)', () => {
+    expect(css).toContain('.pop .grid .k');
+  });
+
+  it('defines .pop .grid .vv selector with monospace font', () => {
+    expect(css).toContain('.pop .grid .vv');
+    expect(css).toMatch(/\.pop \.grid \.vv[^}]*font-family[^:]*:[^}]*var\(--mono\)/s);
+  });
+});
