@@ -2,10 +2,12 @@
 import { computed } from 'vue';
 import { useFilterStore } from '../stores/filters';
 import { useProviderStore } from '../stores/providers';
+import { useMapStore } from '../stores/map';
 import { LicenseType } from '../types/provider';
 
 const filterStore = useFilterStore();
 const providerStore = useProviderStore();
+const mapStore = useMapStore();
 
 const licenseTypes = [
   { type: LicenseType.Center, label: 'Licensed Center', colorVar: '--center' },
@@ -28,11 +30,11 @@ function toggleType(type: string) {
 
 <template>
   <aside>
-    <div class="section" data-test="section-map-view" aria-disabled="true">
+    <div class="section" data-test="section-map-view">
       <h2>Map view</h2>
       <div class="seg">
-        <button data-test="btn-facilities" disabled aria-pressed="true">Facilities</button>
-        <button data-test="btn-density" disabled aria-pressed="false">Density</button>
+        <button data-test="btn-facilities" :aria-pressed="String(mapStore.activeView === 'facilities')" @click="mapStore.activeView = 'facilities'">Facilities</button>
+        <button data-test="btn-density" :aria-pressed="String(mapStore.activeView === 'density')" @click="mapStore.activeView = 'density'">Density</button>
       </div>
     </div>
 
