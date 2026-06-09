@@ -2,7 +2,7 @@
 id: STR-011
 title: Provider popup
 epic: EPIC-003
-status: open
+status: complete
 priority: medium
 ---
 

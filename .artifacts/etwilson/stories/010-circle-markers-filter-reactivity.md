@@ -2,7 +2,7 @@
 id: STR-010
 title: Circle markers with filter reactivity
 epic: EPIC-003
-status: open
+status: complete
 priority: high
 ---
 

@@ -2,7 +2,7 @@
 id: STR-003
 title: Leaflet Map Initialization
 epic: EPIC-001
-status: open
+status: complete
 priority: high
 ---
 

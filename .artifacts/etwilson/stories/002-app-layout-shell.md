@@ -2,7 +2,7 @@
 id: STR-002
 title: App Layout Shell & Theming
 epic: EPIC-001
-status: open
+status: complete
 priority: high
 ---
 

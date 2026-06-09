@@ -2,7 +2,7 @@
 id: STR-007
 title: DevDataView & App Wiring
 epic: EPIC-002
-status: open
+status: complete
 priority: high
 ---
 

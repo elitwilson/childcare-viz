@@ -2,7 +2,7 @@
 id: STR-012
 title: Sidebar filters
 epic: EPIC-003
-status: open
+status: complete
 priority: medium
 ---
 

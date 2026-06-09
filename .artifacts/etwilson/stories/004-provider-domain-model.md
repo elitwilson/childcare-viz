@@ -2,7 +2,7 @@
 id: STR-004
 title: Provider Domain Model
 epic: EPIC-002
-status: open
+status: complete
 priority: high
 ---
 

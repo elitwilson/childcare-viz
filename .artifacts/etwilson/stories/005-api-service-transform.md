@@ -2,7 +2,7 @@
 id: STR-005
 title: API Service & Transform Layer
 epic: EPIC-002
-status: open
+status: complete
 priority: high
 ---
 

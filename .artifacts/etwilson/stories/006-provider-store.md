@@ -2,7 +2,7 @@
 id: STR-006
 title: Pinia Provider Store
 epic: EPIC-002
-status: open
+status: complete
 priority: high
 ---
 

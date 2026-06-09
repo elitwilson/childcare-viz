@@ -2,7 +2,7 @@
 id: STR-008
 title: Provider store persistence
 epic: EPIC-003
-status: open
+status: complete
 priority: high
 ---
 

@@ -2,7 +2,7 @@
 id: STR-009
 title: Filter store
 epic: EPIC-003
-status: open
+status: complete
 priority: high
 ---
 

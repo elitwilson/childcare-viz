@@ -2,7 +2,7 @@
 id: STR-001
 title: Vite + Vue 3 Scaffold
 epic: EPIC-001
-status: open
+status: complete
 priority: high
 ---
 
