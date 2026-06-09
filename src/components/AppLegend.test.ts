@@ -73,6 +73,11 @@ describe('AppLegend — density mode', () => {
     expect(wrapper.find('[data-test="legend-density"]').text()).toContain('sparse');
   });
 
+  it("renders \"sparse · 'desert'\" as the sparse end-label", () => {
+    const wrapper = mount(AppLegend, { props: { activeView: 'density' } });
+    expect(wrapper.find('[data-test="legend-density"]').text()).toContain("sparse · 'desert'");
+  });
+
   it('renders "dense" label', () => {
     const wrapper = mount(AppLegend, { props: { activeView: 'density' } });
     expect(wrapper.find('[data-test="legend-density"]').text()).toContain('dense');

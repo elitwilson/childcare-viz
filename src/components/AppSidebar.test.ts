@@ -78,6 +78,18 @@ describe('AppSidebar', () => {
       expect(wrapper.find('[data-test="btn-density"]').attributes('disabled')).toBeUndefined();
       expect(wrapper.find('[data-test="section-map-view"]').attributes('aria-disabled')).toBeUndefined();
     });
+
+    it('each seg button contains a .dot span', () => {
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="btn-facilities"] .dot').exists()).toBe(true);
+      expect(wrapper.find('[data-test="btn-density"] .dot').exists()).toBe(true);
+    });
+
+    it('.dot spans are aria-hidden', () => {
+      const wrapper = mount(AppSidebar);
+      expect(wrapper.find('[data-test="btn-facilities"] .dot').attributes('aria-hidden')).toBe('true');
+      expect(wrapper.find('[data-test="btn-density"] .dot').attributes('aria-hidden')).toBe('true');
+    });
   });
 
   describe('Facility type chips', () => {

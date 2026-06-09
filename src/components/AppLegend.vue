@@ -21,7 +21,7 @@ defineProps<{ activeView: 'facilities' | 'density' }>();
     </div>
     <div v-else data-test="legend-density">
       <div class="gradient-row">
-        <span class="end-label">sparse</span>
+        <span class="end-label">sparse · 'desert'</span>
         <span class="gradient-bar"></span>
         <span class="end-label">dense</span>
       </div>

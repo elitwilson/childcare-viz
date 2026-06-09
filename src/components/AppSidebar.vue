@@ -49,8 +49,8 @@ function resetFilters() {
     <div class="section" data-test="section-map-view">
       <h2>Map view</h2>
       <div class="seg">
-        <button data-test="btn-facilities" :aria-pressed="mapStore.activeView === 'facilities'" @click="mapStore.activeView = 'facilities'">Facilities</button>
-        <button data-test="btn-density" :aria-pressed="mapStore.activeView === 'density'" @click="mapStore.activeView = 'density'">Density</button>
+        <button data-test="btn-facilities" :aria-pressed="mapStore.activeView === 'facilities'" @click="mapStore.activeView = 'facilities'"><span class="dot" aria-hidden="true"></span>Facilities</button>
+        <button data-test="btn-density" :aria-pressed="mapStore.activeView === 'density'" @click="mapStore.activeView = 'density'"><span class="dot" aria-hidden="true"></span>Density</button>
       </div>
     </div>
 
@@ -148,32 +148,43 @@ aside::-webkit-scrollbar-thumb {
 
 /* Map view segmented control */
 .seg {
-  display: flex;
-  gap: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
 }
 
 .seg button {
-  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.35rem 0.5rem;
   font-size: 0.8rem;
-  background: var(--panel);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
   color: var(--ink, #ddd);
   cursor: pointer;
 }
 
-.seg button:first-child {
-  border-radius: 4px 0 0 4px;
-}
-
-.seg button:last-child {
-  border-radius: 0 4px 4px 0;
-  border-left: none;
-}
-
 .seg button[aria-pressed="true"] {
-  background: var(--accent, #4a9);
-  color: #fff;
+  background: var(--panel-2);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.seg button[aria-pressed="true"] .dot {
+  color: var(--accent);
   opacity: 1;
 }
 
@@ -193,6 +204,10 @@ aside::-webkit-scrollbar-thumb {
   cursor: pointer;
   user-select: none;
   border: 1px solid var(--line);
+}
+
+.chip:hover {
+  border-color: var(--ink-faint);
 }
 
 .chip[aria-checked="false"] {
