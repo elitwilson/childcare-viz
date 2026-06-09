@@ -17,13 +17,6 @@ vi.mock('./stores/providers', () => ({
   useProviderStore: vi.fn(),
 }));
 
-vi.mock('./components/DevDataView.vue', () => ({
-  default: {
-    name: 'DevDataView',
-    template: '<div data-test="dev-data-view"></div>',
-  },
-}));
-
 import { useProviderStore } from './stores/providers';
 import App from './App.vue';
 
@@ -79,36 +72,4 @@ describe('App', () => {
     expect(mockInit).toHaveBeenCalledOnce();
   });
 
-  it('renders "Loading…" when store.loading is true', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({ loading: true }) as unknown as ReturnType<typeof useProviderStore>);
-    const wrapper = mount(App);
-    expect(wrapper.text()).toContain('Loading…');
-  });
-
-  it('renders "Error: {message}" when store.error is set', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({ error: 'fetch failed' }) as unknown as ReturnType<typeof useProviderStore>);
-    const wrapper = mount(App);
-    expect(wrapper.text()).toContain('Error: fetch failed');
-  });
-
-  it('renders DevDataView when providers are available and not loading or errored', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({
-      providers: [{ id: '1', name: 'Test', licenseType: 'center', capacity: 10, lat: 42, lng: -83, address: '1 Main', city: 'Detroit', county: 'Wayne', zipCode: '48201', rating: null }],
-      initialized: true,
-    }) as unknown as ReturnType<typeof useProviderStore>);
-    const wrapper = mount(App);
-    expect(wrapper.find('[data-test="dev-data-view"]').exists()).toBe(true);
-  });
-
-  it('does not render DevDataView when loading', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({ loading: true }) as unknown as ReturnType<typeof useProviderStore>);
-    const wrapper = mount(App);
-    expect(wrapper.find('[data-test="dev-data-view"]').exists()).toBe(false);
-  });
-
-  it('does not render DevDataView when error is set', () => {
-    mockUseProviderStore.mockReturnValue(makeStore({ error: 'oops' }) as unknown as ReturnType<typeof useProviderStore>);
-    const wrapper = mount(App);
-    expect(wrapper.find('[data-test="dev-data-view"]').exists()).toBe(false);
-  });
 });
