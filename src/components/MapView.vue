@@ -52,6 +52,13 @@ onMounted(() => {
     maxZoom: 13,
   }).setView([44.6, -85.6], 6);
 
+  // Suppress scroll-wheel zoom while the mouse button is held down.
+  // Prevents accidental zoom on Magic Mouse / trackpad where slight finger
+  // movement during a drag fires scroll events.
+  map.on('mousedown', () => { if (map) map.scrollWheelZoom.disable(); });
+  map.on('mouseup', () => { if (map) map.scrollWheelZoom.enable(); });
+  map.getContainer().addEventListener('mouseleave', () => { if (map) map.scrollWheelZoom.enable(); });
+
   setBasemap(theme.value);
 
   providerStore.init();

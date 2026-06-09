@@ -12,7 +12,7 @@ function readStorage(): Theme {
   } catch {
     // storage unavailable
   }
-  return 'dark';
+  return 'light';
 }
 
 function writeStorage(t: Theme): void {

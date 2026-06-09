@@ -58,7 +58,10 @@ export function useMapMarkers(
     const group = groups[type];
     group.clearLayers();
     const minCap = filterStore.minCapacity;
-    for (const p of providerStore.providers) {
+    // Sort largest-first so small markers are inserted last; canvas hit-tests in
+    // reverse insertion order, giving smaller circles click priority when overlapping.
+    const sorted = [...providerStore.providers].sort((a, b) => b.capacity - a.capacity);
+    for (const p of sorted) {
       if (p.licenseType !== type) continue;
       if (p.capacity < minCap) continue;
       const marker = L.circleMarker([p.lat, p.lng], {

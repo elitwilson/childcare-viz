@@ -11,24 +11,24 @@ describe('useTheme', () => {
     vi.resetModules();
   });
 
-  it('defaults to dark when localStorage is empty', async () => {
-    const { useTheme } = await import('./useTheme');
-    const { theme } = useTheme();
-    expect(theme.value).toBe('dark');
-  });
-
-  it('restores light from localStorage on init', async () => {
-    localStorage.setItem('mca-theme', 'light');
+  it('defaults to light when localStorage is empty', async () => {
     const { useTheme } = await import('./useTheme');
     const { theme } = useTheme();
     expect(theme.value).toBe('light');
   });
 
-  it('defaults to dark when localStorage value is invalid', async () => {
-    localStorage.setItem('mca-theme', 'invalid');
+  it('restores dark from localStorage on init', async () => {
+    localStorage.setItem('mca-theme', 'dark');
     const { useTheme } = await import('./useTheme');
     const { theme } = useTheme();
     expect(theme.value).toBe('dark');
+  });
+
+  it('defaults to light when localStorage value is invalid', async () => {
+    localStorage.setItem('mca-theme', 'invalid');
+    const { useTheme } = await import('./useTheme');
+    const { theme } = useTheme();
+    expect(theme.value).toBe('light');
   });
 
   it('setTheme applies data-theme attribute to <html>', async () => {

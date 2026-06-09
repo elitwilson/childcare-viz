@@ -47,7 +47,8 @@ html {
 }
 
 header, aside,
-.legend, .seg, .chip, .reset, input[type=range], .leaflet-popup-content-wrapper {
+.legend, .seg, .chip, .reset, input[type=range],
+.leaflet-container .leaflet-popup-content-wrapper {
   transition: background 0.25s, border-color 0.25s, color 0.25s;
 }
 
@@ -82,7 +83,7 @@ main {
   background: var(--map-bg);
 }
 
-.leaflet-popup-content-wrapper {
+.leaflet-container .leaflet-popup-content-wrapper {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -91,7 +92,7 @@ main {
   padding: 0;
 }
 
-.leaflet-popup-tip {
+.leaflet-container .leaflet-popup-tip {
   background: var(--panel);
 }
 

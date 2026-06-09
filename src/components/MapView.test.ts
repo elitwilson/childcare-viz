@@ -12,6 +12,8 @@ const { mockTileLayer, mockMap, mockUseMapMarkers, mockUseHeatLayer, mockProvide
     removeLayer: vi.fn(),
     on: vi.fn(),
     getZoom: vi.fn(() => 6),
+    scrollWheelZoom: { disable: vi.fn(), enable: vi.fn() },
+    getContainer: vi.fn(() => ({ addEventListener: vi.fn() })),
   };
   return {
     mockTileLayer,
@@ -126,11 +128,11 @@ describe('MapView', () => {
     expect(opts).toMatchObject({ minZoom: 5, maxZoom: 13 });
   });
 
-  it('creates a CARTO dark tile layer with correct URL', () => {
+  it('creates a CARTO light tile layer with correct URL', () => {
     mount(MapView);
     const url = (L.tileLayer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(url).toContain('cartocdn.com');
-    expect(url).toContain('dark_all');
+    expect(url).toContain('light_all');
   });
 
   it('creates tile layer with correct options', () => {
