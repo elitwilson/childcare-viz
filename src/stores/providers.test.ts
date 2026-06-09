@@ -47,6 +47,7 @@ const providerRecord = (id: string): Provider => ({
 
 describe('useProviderStore', () => {
   beforeEach(() => {
+    localStorage.clear();
     setActivePinia(createPinia());
     vi.resetAllMocks();
   });
@@ -63,12 +64,61 @@ describe('useProviderStore', () => {
     expect(store.initialized).toBe(true);
   });
 
-  it('does not call fetchAllProviders again when already initialized', async () => {
+  it('sets fetchedAt to a number on successful fetch', async () => {
     mockFetch.mockResolvedValue([rawRecord('A')]);
     mockTransform.mockImplementation((r) => providerRecord(r.LicenseNumber));
 
     const store = useProviderStore();
     await store.init();
+
+    expect(typeof store.fetchedAt).toBe('number');
+    expect(store.fetchedAt).toBeGreaterThan(0);
+  });
+
+  it('does not call fetchAllProviders again when already initialized with fresh cache', async () => {
+    mockFetch.mockResolvedValue([rawRecord('A')]);
+    mockTransform.mockImplementation((r) => providerRecord(r.LicenseNumber));
+
+    const store = useProviderStore();
+    await store.init();
+    await store.init();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips fetch when rehydrated with fresh fetchedAt', async () => {
+    const store = useProviderStore();
+    store.initialized = true;
+    store.fetchedAt = Date.now() - 1000;
+    store.providers = [providerRecord('A')];
+
+    await store.init();
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('fetches again when rehydrated with stale fetchedAt (> 24h ago)', async () => {
+    mockFetch.mockResolvedValue([rawRecord('B')]);
+    mockTransform.mockImplementation((r) => providerRecord(r.LicenseNumber));
+
+    const store = useProviderStore();
+    store.initialized = true;
+    store.fetchedAt = Date.now() - 86_400_001;
+    store.providers = [providerRecord('A')];
+
+    await store.init();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('fetches again when initialized is true but fetchedAt is null', async () => {
+    mockFetch.mockResolvedValue([rawRecord('A')]);
+    mockTransform.mockImplementation((r) => providerRecord(r.LicenseNumber));
+
+    const store = useProviderStore();
+    store.initialized = true;
+    store.fetchedAt = null;
+
     await store.init();
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
