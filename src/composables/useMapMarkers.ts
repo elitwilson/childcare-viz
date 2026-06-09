@@ -69,7 +69,7 @@ export function useMapMarkers(
         opacity: 0.9,
         weight: 1.4,
         renderer,
-      });
+      }).bindPopup(buildPopupHtml(p, colors[type]));
       group.addLayer(marker);
     }
   }

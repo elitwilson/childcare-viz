@@ -22,7 +22,7 @@ const {
 } = vi.hoisted(() => {
   const createdGroups: MockGroup[] = [];
   let groupCounter = 0;
-  const mockCircleMarkerObj = { options: {} };
+  const mockCircleMarkerObj = { options: {}, bindPopup: vi.fn().mockReturnThis() };
   return {
     mockMapAddLayer: vi.fn(),
     mockMapRemoveLayer: vi.fn(),
@@ -311,5 +311,55 @@ describe('useMapMarkers', () => {
     const totalClears = createdGroups.reduce((sum, g) => sum + g.clearLayers.mock.calls.length, 0);
     // Only the active center group should be cleared (1), not the inactive family group
     expect(totalClears).toBe(1);
+  });
+});
+
+describe('popup binding', () => {
+  let providerStore: ReturnType<typeof useProviderStore>;
+  let filterStore: ReturnType<typeof useFilterStore>;
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    vi.clearAllMocks();
+    resetGroupCounter();
+    createdGroups.length = 0;
+    providerStore = useProviderStore();
+    filterStore = useFilterStore();
+  });
+
+  it('calls bindPopup on each created circleMarker', async () => {
+    providerStore.providers = [makeProvider({ licenseType: LicenseType.Center })];
+    useMapMarkers(mockMap as unknown as import('leaflet').Map, providerStore, filterStore);
+    await nextTick();
+
+    expect(mockCircleMarkerObj.bindPopup).toHaveBeenCalledOnce();
+  });
+
+  it('bindPopup receives an HTML string containing the provider name', async () => {
+    providerStore.providers = [makeProvider({ name: 'Bright Futures', licenseType: LicenseType.Center })];
+    useMapMarkers(mockMap as unknown as import('leaflet').Map, providerStore, filterStore);
+    await nextTick();
+
+    const html = mockCircleMarkerObj.bindPopup.mock.calls[0][0] as string;
+    expect(typeof html).toBe('string');
+    expect(html).toContain('Bright Futures');
+  });
+
+  it('bindPopup receives HTML containing the license type label', async () => {
+    providerStore.providers = [makeProvider({ licenseType: LicenseType.FamilyHome })];
+    useMapMarkers(mockMap as unknown as import('leaflet').Map, providerStore, filterStore);
+    await nextTick();
+
+    const html = mockCircleMarkerObj.bindPopup.mock.calls[0][0] as string;
+    expect(html).toContain('Family Home');
+  });
+
+  it('does not pass closeButton: false to bindPopup options', async () => {
+    providerStore.providers = [makeProvider({ licenseType: LicenseType.Center })];
+    useMapMarkers(mockMap as unknown as import('leaflet').Map, providerStore, filterStore);
+    await nextTick();
+
+    const opts = mockCircleMarkerObj.bindPopup.mock.calls[0][1] as Record<string, unknown> | undefined;
+    expect(opts?.closeButton).not.toBe(false);
   });
 });
