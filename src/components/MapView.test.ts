@@ -3,18 +3,21 @@ import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 
 // Hoist all mock variables so vi.mock factories can reference them
-const { mockTileLayer, mockMap, mockUseMapMarkers, mockProviderInit } = vi.hoisted(() => {
+const { mockTileLayer, mockMap, mockUseMapMarkers, mockUseHeatLayer, mockProviderInit } = vi.hoisted(() => {
   const mockTileLayer = { addTo: vi.fn().mockReturnThis() };
   const mockMap = {
     setView: vi.fn().mockReturnThis(),
     remove: vi.fn(),
     addLayer: vi.fn(),
     removeLayer: vi.fn(),
+    on: vi.fn(),
+    getZoom: vi.fn(() => 6),
   };
   return {
     mockTileLayer,
     mockMap,
-    mockUseMapMarkers: vi.fn(),
+    mockUseMapMarkers: vi.fn(() => ({})),
+    mockUseHeatLayer: vi.fn(),
     mockProviderInit: vi.fn(),
   };
 });
@@ -29,6 +32,8 @@ vi.mock('leaflet', () => ({
   },
 }));
 
+vi.mock('leaflet.heat', () => ({}));
+
 vi.mock('../composables/useMapMarkers', async (importActual) => {
   const actual = await importActual<typeof import('../composables/useMapMarkers')>();
   return {
@@ -36,6 +41,10 @@ vi.mock('../composables/useMapMarkers', async (importActual) => {
     useMapMarkers: mockUseMapMarkers,
   };
 });
+
+vi.mock('../composables/useHeatLayer', () => ({
+  useHeatLayer: mockUseHeatLayer,
+}));
 
 vi.mock('../stores/providers', () => ({
   useProviderStore: vi.fn(() => ({
@@ -51,6 +60,12 @@ vi.mock('../stores/filters', () => ({
   useFilterStore: vi.fn(() => ({
     activeTypes: { center: true, family_home: true, group_home: true },
     minCapacity: 0,
+  })),
+}));
+
+vi.mock('../stores/map', () => ({
+  useMapStore: vi.fn(() => ({
+    activeView: 'facilities',
   })),
 }));
 

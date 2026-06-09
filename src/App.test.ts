@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia';
 const { mockTileLayer, mockMap, mockInit } = vi.hoisted(() => {
   return {
     mockTileLayer: { addTo: vi.fn().mockReturnThis() },
-    mockMap: { setView: vi.fn().mockReturnThis(), remove: vi.fn(), addLayer: vi.fn(), removeLayer: vi.fn() },
+    mockMap: { setView: vi.fn().mockReturnThis(), remove: vi.fn(), addLayer: vi.fn(), removeLayer: vi.fn(), on: vi.fn(), getZoom: vi.fn(() => 6) },
     mockInit: vi.fn(),
   };
 });
@@ -19,6 +19,8 @@ vi.mock('leaflet', () => ({
     layerGroup: vi.fn(() => ({ addLayer: vi.fn(), clearLayers: vi.fn() })),
   },
 }));
+
+vi.mock('leaflet.heat', () => ({}));
 
 vi.mock('./composables/useMapMarkers', () => ({
   useMapMarkers: vi.fn(),
@@ -39,6 +41,14 @@ vi.mock('./stores/filters', () => ({
     activeTypes: { center: true, family_home: true, group_home: true },
     minCapacity: 0,
   })),
+}));
+
+vi.mock('./stores/map', () => ({
+  useMapStore: vi.fn(() => ({ activeView: 'facilities' })),
+}));
+
+vi.mock('./composables/useHeatLayer', () => ({
+  useHeatLayer: vi.fn(),
 }));
 
 import App from './App.vue';
