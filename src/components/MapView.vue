@@ -7,6 +7,7 @@ import { useFilterStore } from '../stores/filters';
 import { useMapStore } from '../stores/map';
 import { useMapMarkers } from '../composables/useMapMarkers';
 import { useHeatLayer } from '../composables/useHeatLayer';
+import AppLegend from './AppLegend.vue';
 
 const mapEl = ref<HTMLElement>();
 let map: L.Map | null = null;
@@ -43,5 +44,6 @@ onUnmounted(() => {
 <template>
   <div class="map-wrap">
     <div id="map" ref="mapEl"></div>
+    <AppLegend :active-view="mapStore.activeView" />
   </div>
 </template>

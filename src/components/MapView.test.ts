@@ -175,6 +175,19 @@ describe('MapView', () => {
     expect(providerArg).toHaveProperty('init');
     expect(filterArg).toHaveProperty('activeTypes');
   });
+
+  // Legend wiring (from STR-016)
+  it('renders AppLegend inside .map-wrap', () => {
+    const wrapper = mount(MapView);
+    expect(wrapper.find('.map-wrap [data-test="legend-facilities"]').exists()).toBe(true);
+  });
+
+  it('passes mapStore.activeView to AppLegend', () => {
+    const wrapper = mount(MapView);
+    // mapStore is mocked to return activeView: 'facilities' — facilities block should be present
+    expect(wrapper.find('[data-test="legend-facilities"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="legend-density"]').exists()).toBe(false);
+  });
 });
 
 function makeProvider(overrides: Partial<Provider> = {}): Provider {
